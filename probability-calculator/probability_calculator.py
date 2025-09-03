@@ -11,19 +11,46 @@ class Hat:
 
     def draw(self, draws):
         length = len(self.contents)
-        if draws > length:
-            return self.contents
-        contents_poppable = self.contents
         drawn_balls = []
+        if draws >= length:
+            drawn_balls.extend(self.contents)
+            self.contents.clear()
+            return drawn_balls        
         for i in range(draws):
-            ball_to_draw = random.randint(0, length-i)
-            drawn_balls.append(contents_poppable(ball_to_draw))
+            ball_to_draw = random.randint(0, length-i-1)
+            drawn_balls.append(self.contents.pop(ball_to_draw))
         return drawn_balls
+
+    def put_back(self, contents):
+        for content in contents:
+            self.contents.append(content)
+
     
     
 def experiment(hat, expected_balls, num_balls_drawn, num_experiments):
+    success_exp = 0
     # returns list of the balls drawn from the hat
-    hat.draw(num_balls_drawn)
+    for _ in range(num_experiments):
+        hat_draw = hat.draw(num_balls_drawn)
+        dict_balls = expected_balls.copy()
+        for color in hat_draw:
+            if color in dict_balls:
+                dict_balls[color] -= 1
+                if dict_balls[color] == 0:
+                    del dict_balls[color]
+                    if not dict_balls:
+                        success_exp += 1
+                        break
+            else:
+                continue
+        hat.put_back(hat_draw)
+    return success_exp/num_experiments
 
-hat1 = Hat(yellow=3, red=2)
+            
+
+hat1 = Hat(black=6, red=4, green=3)
 print(hat1.contents)
+print(experiment(hat=hat1,
+                  expected_balls={'red':2,'green':1},
+                  num_balls_drawn=5,
+                  num_experiments=2000))
